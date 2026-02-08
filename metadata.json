@@ -1,0 +1,5 @@
+{
+  "name": "ML Product Analyzer",
+  "description": "Sistema completo para análise de viabilidade e precificação de produtos para o Mercado Livre, com cálculos automáticos de impostos, taxas e lucro estimado.",
+  "requestFramePermissions": []
+}
