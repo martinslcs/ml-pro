@@ -4,31 +4,49 @@ import { Package, Lock, Mail, ArrowRight, Sun, Moon } from 'lucide-react';
 
 interface LoginProps {
   onLogin: (email: string) => void;
+  onNavigateToRegister: () => void;
   isDarkMode: boolean;
   toggleTheme: () => void;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin, isDarkMode, toggleTheme }) => {
+const Login: React.FC<LoginProps> = ({ onLogin, onNavigateToRegister, isDarkMode, toggleTheme }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
-    
+    setError('');
+
+    if (!email || !password) {
+      setError('Preencha todos os campos');
+      return;
+    }
+
     setIsLoading(true);
-    // Simulação de delay de rede
-    setTimeout(() => {
-      onLogin(email);
+
+    try {
+      const { authService } = await import('../services/authService');
+      const result = await authService.login(email, password);
+
+      if (result.success) {
+        onLogin(email);
+      } else {
+        setError(result.error || 'Erro ao fazer login');
+      }
+    } catch (err) {
+      console.error('Erro no login:', err);
+      setError('Erro ao fazer login. Verifique se o Supabase está configurado.');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] dark:bg-slate-950 p-4 transition-colors duration-300">
       <div className="absolute top-8 right-8">
-        <button 
+        <button
           onClick={toggleTheme}
           className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm text-slate-500 hover:text-yellow-500 transition-all"
         >
@@ -49,13 +67,19 @@ const Login: React.FC<LoginProps> = ({ onLogin, isDarkMode, toggleTheme }) => {
 
         <div className="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-2xl shadow-slate-200 dark:shadow-none border border-slate-100 dark:border-slate-800">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <p className="text-red-600 dark:text-red-400 text-sm font-semibold text-center">{error}</p>
+              </div>
+            )}
+
             <div>
               <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest mb-2 block">Seu E-mail</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-yellow-500 transition-colors" size={20} />
-                <input 
+                <input
                   required
-                  type="email" 
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="exemplo@email.com"
@@ -68,9 +92,9 @@ const Login: React.FC<LoginProps> = ({ onLogin, isDarkMode, toggleTheme }) => {
               <label className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest mb-2 block">Sua Senha</label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-yellow-500 transition-colors" size={20} />
-                <input 
+                <input
                   required
-                  type="password" 
+                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -79,8 +103,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, isDarkMode, toggleTheme }) => {
               </div>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isLoading}
               className="w-full bg-slate-900 dark:bg-yellow-400 text-white dark:text-slate-900 py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 dark:hover:bg-yellow-500 transition-all shadow-xl shadow-slate-900/20 dark:shadow-yellow-500/10 disabled:opacity-50"
             >
@@ -93,7 +117,15 @@ const Login: React.FC<LoginProps> = ({ onLogin, isDarkMode, toggleTheme }) => {
           </form>
 
           <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800 text-center">
-            <p className="text-xs text-slate-400 font-medium">Não tem uma conta? <span className="text-yellow-600 dark:text-yellow-500 font-bold cursor-pointer hover:underline">Fale com o suporte</span></p>
+            <p className="text-xs text-slate-400 font-medium">
+              Não tem uma conta?{' '}
+              <button
+                onClick={onNavigateToRegister}
+                className="text-yellow-600 dark:text-yellow-500 font-bold hover:underline"
+              >
+                Criar conta
+              </button>
+            </p>
           </div>
         </div>
 

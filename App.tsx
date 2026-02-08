@@ -8,6 +8,7 @@ import SandboxSimulator from './components/SandboxSimulator';
 import ComparisonPanel from './components/ComparisonPanel';
 import ProviderManager from './components/ProviderManager';
 import Login from './components/Login';
+import Register from './components/Register';
 import { ProdutoAnalise } from './types';
 import { storageService } from './services/storageService';
 
@@ -19,9 +20,10 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('session_active') === 'true';
   });
-  
+  const [showRegister, setShowRegister] = useState(false);
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('theme') === 'dark' || 
+    return localStorage.getItem('theme') === 'dark' ||
       (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
 
@@ -40,7 +42,7 @@ const App: React.FC = () => {
   const loadData = async () => {
     try {
       const data = await storageService.getAll();
-      const sortedData = (data || []).sort((a, b) => 
+      const sortedData = (data || []).sort((a, b) =>
         new Date(b.data_criacao).getTime() - new Date(a.data_criacao).getTime()
       );
       setAnalyses(sortedData);
@@ -97,7 +99,7 @@ const App: React.FC = () => {
     if (!id) return;
 
     const confirmMessage = "Excluir análise?\n\nEsta ação não pode ser desfeita. A análise será permanentemente removida.";
-    
+
     if (window.confirm(confirmMessage)) {
       try {
         setAnalyses(prev => prev.filter(a => String(a.id) !== String(id)));
@@ -128,7 +130,24 @@ const App: React.FC = () => {
   };
 
   if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />;
+    if (showRegister) {
+      return (
+        <Register
+          onRegister={handleLogin}
+          onBackToLogin={() => setShowRegister(false)}
+          isDarkMode={isDarkMode}
+          toggleTheme={toggleTheme}
+        />
+      );
+    }
+    return (
+      <Login
+        onLogin={handleLogin}
+        onNavigateToRegister={() => setShowRegister(true)}
+        isDarkMode={isDarkMode}
+        toggleTheme={toggleTheme}
+      />
+    );
   }
 
   const renderContent = () => {
@@ -142,42 +161,42 @@ const App: React.FC = () => {
     }
 
     switch (activeTab) {
-      case 'dashboard': 
+      case 'dashboard':
         return <Dashboard analyses={analyses} />;
-      case 'list': 
+      case 'list':
         return (
-          <AnalysisList 
-            analyses={analyses} 
-            onEdit={handleEdit} 
-            onDelete={handleDelete} 
-            onDuplicate={handleDuplicate} 
+          <AnalysisList
+            analyses={analyses}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onDuplicate={handleDuplicate}
           />
         );
-      case 'new': 
+      case 'new':
         return (
-          <AnalysisForm 
-            key={editingAnalysis?.id || 'new_analysis_form'} 
-            initialData={editingAnalysis} 
-            onSave={handleSave} 
-            onCancel={() => setActiveTab('list')} 
+          <AnalysisForm
+            key={editingAnalysis?.id || 'new_analysis_form'}
+            initialData={editingAnalysis}
+            onSave={handleSave}
+            onCancel={() => setActiveTab('list')}
           />
         );
-      case 'sandbox': 
+      case 'sandbox':
         return <SandboxSimulator />;
-      case 'compare': 
+      case 'compare':
         return <ComparisonPanel analyses={analyses} />;
-      case 'providers': 
+      case 'providers':
         return <ProviderManager />;
-      default: 
+      default:
         return <Dashboard analyses={analyses} />;
     }
   };
 
   return (
-    <Layout 
-      activeTab={activeTab} 
-      onTabChange={handleTabChange} 
-      isDarkMode={isDarkMode} 
+    <Layout
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+      isDarkMode={isDarkMode}
       toggleTheme={toggleTheme}
       onLogout={handleLogout}
     >
