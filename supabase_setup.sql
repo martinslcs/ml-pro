@@ -13,10 +13,11 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 -- Habilitar Row Level Security (RLS)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
--- Política: Usuários podem ler apenas seus próprios dados
-CREATE POLICY "Users can read own data" ON users
+-- Política: Permitir leitura de todos os dados
+-- (A segurança é controlada pela aplicação via bcrypt)
+CREATE POLICY "Allow read access" ON users
   FOR SELECT
-  USING (auth.uid() = id::text OR true);
+  USING (true);
 
 -- Política: Permitir inserção de novos usuários (registro)
 CREATE POLICY "Allow user registration" ON users
